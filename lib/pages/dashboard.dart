@@ -1,43 +1,39 @@
-import 'dart:convert';
-
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/break.dart';
+import '../models/break_type.dart';
+import '../providers/breaks_provider.dart';
+import '../providers/earnings_provider.dart';
+import '../providers/user_settings_provider.dart';
+import '../widgets/break_tile.dart';
+import '../widgets/configuration_section.dart';
+import '../widgets/summary_section.dart';
 import 'configuration.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final breaks = ref.watch(breaksProvider);
+    final settings = ref.watch(userSettingsProvider);
+    final totalEarnings = ref.watch(totalEarningsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  List<BreakRecord> _breakRecords = [];
-
-  double _monthlyIncome = 0.0;
-  double _weeklyHours = 0.0;
-  double _totalEarnings = 0.0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        shadowColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(l10n.dashboard),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ConfigurationScreen()),
               );
@@ -46,69 +42,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+        child: ListView(
           children: [
-            Row(
-              children: [
-                const Icon(Icons.money),
-                const SizedBox(width: 10),
-                Text('Monthly Income: $_monthlyIncome'),
-              ],
-            ),
-            Row(
-              children: [
-                const Icon(Icons.access_time),
-                const SizedBox(width: 10),
-                Text('Weekly Hours: $_weeklyHours'),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Break Summary',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const SizedBox(height: 10),
+            ConfigurationSection(
+              monthlyIncome: settings.monthlyIncome,
+              weeklyHours: settings.weeklyHours,
+              currency: settings.currency,
             ),
             const SizedBox(height: 10),
-            // Add the total amount earned during all breaks
-            Row(
-              children: [
-                const Icon(Icons.money_off_rounded),
-                const SizedBox(width: 10),
-                Text('Total break earnings: ${_totalEarnings.toStringAsFixed(2)}'),
-              ],
-            ),
-            //Call function to display chart
-            BreakChart(breakRecords: _breakRecords),
-
+            SummarySection(title: l10n.summary, breakRecords: breaks, totalEarnings: totalEarnings),
             const SizedBox(height: 10),
-            const Text('Break Records:', style: TextStyle(fontSize: 16)),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _breakRecords.length,
-                itemBuilder: (context, index) {
-                  final record = _breakRecords[index];
-                  return ListTile(
-                    title: Text('${record.type} - ${record.duration.inMinutes} minutes'),
-                    subtitle: Text('Earned: \$${_calculateEarnings(record).toStringAsFixed(2)}'),
+            Text(l10n.breaks, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            breaks.isEmpty ? Center(child: Text(l10n.noBreakRecords)) : const SizedBox(),
+            // Add break items in reverse chronological order
+            ...breaks.asMap().entries.map((entry) {
+              final index = breaks.length - 1 - entry.key;
+              final record = breaks[index];
+              return BreakTile(record: record, breakIndex: index, currency: settings.currency);
+            }),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.restart_alt),
+              label: Text(l10n.reset),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                if (context.mounted) {
+                  await Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ConfigurationScreen()),
                   );
-                },
-              ),
+                }
+              },
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primaryFixedDim,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         child: const Icon(Icons.add),
         onPressed: () {
-          _showAddBreakDialog(context);
+          _showAddBreakDialog(context, ref);
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
   }
 
-  Future<void> _showAddBreakDialog(BuildContext context) async {
-    String? selectedType;
+  Future<void> _showAddBreakDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    BreakType? selectedType;
     int hours = 0;
     int minutes = 0;
     int seconds = 0;
@@ -124,32 +119,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: const Text('Add Break'),
+              title: Text(l10n.addBreak),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    DropdownButtonFormField<String>(
+                    DropdownButtonFormField<BreakType>(
                       key: breakTypeDropdown,
-                      decoration: const InputDecoration(labelText: 'Break Type'),
+                      decoration: InputDecoration(labelText: l10n.breakType),
                       value: selectedType,
                       items:
-                          BreakType.values.map<DropdownMenuItem<String>>((BreakType breakType) {
-                            return DropdownMenuItem<String>(
-                              value: breakType.representation,
-                              child: Text(breakType.representation),
+                          BreakType.values.map<DropdownMenuItem<BreakType>>((BreakType breakType) {
+                            return DropdownMenuItem<BreakType>(
+                              value: breakType,
+                              child: Text(breakType.getDescription(context)),
                             );
                           }).toList(),
-                      onChanged: (String? newValue) {
+                      onChanged: (BreakType? newValue) {
                         setState(() {
                           selectedType = newValue;
                         });
                       },
-                      validator:
-                          (value) =>
-                              (value == null || value.isEmpty)
-                                  ? 'Please select a break type'
-                                  : null,
+                      validator: (value) => value == null ? l10n.pleaseSelectBreakType : null,
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -157,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: TextFormField(
                             key: hoursField,
-                            decoration: const InputDecoration(labelText: 'Hours'),
+                            decoration: InputDecoration(labelText: l10n.hours),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
                               hours = int.tryParse(value) ?? 0;
@@ -167,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 return null;
                               }
                               if (int.tryParse(value) == null) {
-                                return 'Invalid number';
+                                return l10n.invalidNumber;
                               }
                               return null;
                             },
@@ -177,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: TextFormField(
                             key: minutesField,
-                            decoration: const InputDecoration(labelText: 'Minutes'),
+                            decoration: InputDecoration(labelText: l10n.minutes),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
                               minutes = int.tryParse(value) ?? 0;
@@ -187,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 return null;
                               }
                               if (int.tryParse(value) == null) {
-                                return 'Invalid number';
+                                return l10n.invalidNumber;
                               }
                               return null;
                             },
@@ -197,7 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Expanded(
                           child: TextFormField(
                             key: secondsField,
-                            decoration: const InputDecoration(labelText: 'Seconds'),
+                            decoration: InputDecoration(labelText: l10n.seconds),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
                               seconds = int.tryParse(value) ?? 0;
@@ -207,7 +198,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 return null;
                               }
                               if (int.tryParse(value) == null) {
-                                return 'Invalid number';
+                                return l10n.invalidNumber;
                               }
                               return null;
                             },
@@ -220,13 +211,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 TextButton(
-                  child: const Text('Add'),
+                  child: Text(l10n.add),
                   onPressed: () {
                     final isValid =
                         breakTypeDropdown.currentState!.validate() &&
@@ -234,10 +225,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         minutesField.currentState!.validate() &&
                         secondsField.currentState!.validate();
 
-                    if (isValid) {
+                    if (isValid && selectedType != null) {
                       final duration = Duration(hours: hours, minutes: minutes, seconds: seconds);
-                      final newBreak = BreakRecord(type: selectedType!, duration: duration);
-                      _addBreak(newBreak);
+                      final earnings = ref.read(earningsCalculatorProvider(duration));
+                      final breakRecord = BreakRecord(
+                        breakType: selectedType!,
+                        duration: duration,
+                        earnings: earnings,
+                      );
+                      ref.read(breaksProvider.notifier).createBreak(breakRecord);
                       Navigator.of(context).pop();
                     }
                   },
@@ -248,88 +244,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       },
     );
-  }
-
-  double _calculateEarnings(BreakRecord record) {
-    final hourlyRate = _monthlyIncome / (_weeklyHours * 4.33); // Approximate monthly hours
-    final breakHours = record.duration.inSeconds / 3600;
-    return hourlyRate * breakHours;
-  }
-
-  void _addBreak(BreakRecord breakRecord) {
-    setState(() {
-      _breakRecords.add(breakRecord);
-      _totalEarnings += _calculateEarnings(breakRecord);
-    });
-    _saveData(); // Persist the new break.
-  }
-
-  Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _monthlyIncome = prefs.getDouble('monthlyIncome') ?? 0.0;
-      _weeklyHours = prefs.getDouble('weeklyHours') ?? 0.0;
-      _totalEarnings = prefs.getDouble('totalEarnings') ?? 0.0;
-
-      // Load break records from SharedPreferences
-      final breakRecordsJson = prefs.getStringList('breakRecords');
-      if (breakRecordsJson != null) {
-        _breakRecords =
-            breakRecordsJson.map((json) => BreakRecord.fromJson(jsonDecode(json))).toList();
-      }
-    });
-  }
-
-  Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Save break records to SharedPreferences
-    final breakRecordsJson =
-        _breakRecords.map((breakRecord) => jsonEncode(breakRecord.toJson())).toList();
-    await prefs.setStringList('breakRecords', breakRecordsJson);
-    await prefs.setDouble('totalEarnings', _totalEarnings);
-  }
-}
-
-class BreakChart extends StatelessWidget {
-  final List<BreakRecord> breakRecords;
-
-  const BreakChart({required this.breakRecords, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.3,
-      child:
-          breakRecords.isEmpty
-              ? const Center(child: Text('No break records available yet.'))
-              : PieChart(
-                PieChartData(
-                  borderData: FlBorderData(show: false),
-                  sectionsSpace: 0,
-                  centerSpaceRadius: 40,
-                  sections:
-                      BreakType.values.map<PieChartSectionData>((BreakType breakType) {
-                        return PieChartSectionData(
-                          value: _computeDuration(breakType: breakType).toDouble(),
-                          title: breakType.title,
-                          color: breakType.color,
-                          radius: 50,
-                          titleStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        );
-                      }).toList(),
-                ),
-              ),
-    );
-  }
-
-  int _computeDuration({required BreakType breakType}) {
-    return breakRecords
-        .where((record) => record.type == breakType.representation)
-        .map((record) => record.duration.inMinutes)
-        .fold(0, (previous, current) => previous + current);
   }
 }

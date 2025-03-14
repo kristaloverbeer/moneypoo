@@ -1,0 +1,69 @@
+{
+  "configuration": "Configuration",
+  "monthlyIncome": "Revenu mensuel",
+  "weeklyHours": "Heures hebdomadaires",
+  "currency": "Devise",
+  "language": "Langue",
+  "save": "Enregistrer",
+  "dashboard": "Tableau de bord",
+  "settings": "Paramètres",
+  "pleaseSelectCurrency": "Veuillez sélectionner une devise",
+  "addBreak": "Ajouter une pause",
+  "breakType": "Type de pause",
+  "pleaseSelectBreakType": "Veuillez sélectionner un type de pause",
+  "hours": "Heures",
+  "minutes": "Minutes",
+  "seconds": "Secondes",
+  "invalidNumber": "Nombre invalide",
+  "cancel": "Annuler",
+  "add": "Ajouter",
+  "reset": "Réinitialiser",
+  "onebreak": "Pause",
+  "breaks": "Pauses",
+  "noBreakRecords": "Aucun enregistrement de pause disponible.",
+  "duration": "Durée",
+  "earnings": "Gains",
+  "deleteBreak": "Supprimer la pause",
+  "delete": "Supprimer",
+  "confirmDeleteBreak": "Êtes-vous sûr de vouloir supprimer cette pause ?",
+  "summary": "Résumé",
+  "totalBreakEarnings": "Total des gains de pause : {currency} {amount}",
+  "@totalBreakEarnings": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noBreakChartRecords": "Aucun enregistrement de pause disponible.",
+  "configurationMonthlyIncome": "Revenu mensuel : {currency} {amount}",
+  "@configurationMonthlyIncome": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "configurationWeeklyHours": "Heures hebdomadaires : {hours}h",
+  "@configurationWeeklyHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "breakTypeCigarette": "Pause cigarette",
+  "breakTypePoop": "Pause caca",
+  "breakTypePee": "Pause pipi",
+  "breakTypeCoffee": "Pause café",
+  "breakTypeCigaretteShort": "Clope",
+  "breakTypePoopShort": "Caca",
+  "breakTypePeeShort": "Pipi",
+  "breakTypeCoffeeShort": "Café"
+}

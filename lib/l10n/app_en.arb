@@ -1,0 +1,69 @@
+{
+  "configuration": "Configuration",
+  "monthlyIncome": "Monthly Income",
+  "weeklyHours": "Weekly Hours",
+  "currency": "Currency",
+  "language": "Language",
+  "save": "Save",
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "pleaseSelectCurrency": "Please select a currency",
+  "addBreak": "Add Break",
+  "breakType": "Break Type",
+  "pleaseSelectBreakType": "Please select a break type",
+  "hours": "Hours",
+  "minutes": "Minutes",
+  "seconds": "Seconds",
+  "invalidNumber": "Invalid number",
+  "cancel": "Cancel",
+  "add": "Add",
+  "reset": "Reset",
+  "onebreak": "Break",
+  "breaks": "Breaks",
+  "noBreakRecords": "No break records available yet.",
+  "duration": "Duration",
+  "earnings": "Earnings",
+  "deleteBreak": "Delete Break",
+  "delete": "Delete",
+  "confirmDeleteBreak": "Are you sure you want to delete this break?",
+  "summary": "Summary",
+  "totalBreakEarnings": "Total break earnings: {currency} {amount}",
+  "@totalBreakEarnings": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noBreakChartRecords": "No break records available yet.",
+  "configurationMonthlyIncome": "Monthly Income: {currency} {amount}",
+  "@configurationMonthlyIncome": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "configurationWeeklyHours": "Weekly Hours: {hours}h",
+  "@configurationWeeklyHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "breakTypeCigarette": "Cigarette Break",
+  "breakTypePoop": "Poop Break",
+  "breakTypePee": "Pee Break",
+  "breakTypeCoffee": "Coffee Break",
+  "breakTypeCigaretteShort": "Cigs",
+  "breakTypePoopShort": "Poop",
+  "breakTypePeeShort": "Pee",
+  "breakTypeCoffeeShort": "Coffee"
+}

@@ -1,28 +1,21 @@
-import 'package:flutter/material.dart';
+import 'break_type.dart';
 
 class BreakRecord {
-  final String type;
+  final BreakType breakType;
   final Duration duration;
+  final double earnings;
 
-  BreakRecord({required this.type, required this.duration});
+  BreakRecord({required this.breakType, required this.duration, required this.earnings});
 
   Map<String, dynamic> toJson() {
-    return {'type': type, 'durationSeconds': duration.inSeconds};
+    return {'type': breakType.index, 'durationSeconds': duration.inSeconds, 'earnings': earnings};
   }
 
   factory BreakRecord.fromJson(Map<String, dynamic> json) {
-    return BreakRecord(type: json['type'], duration: Duration(seconds: json['durationSeconds']));
+    return BreakRecord(
+      breakType: BreakType.values[json['type']],
+      duration: Duration(seconds: json['durationSeconds']),
+      earnings: json['earnings']?.toDouble() ?? 0.0,
+    );
   }
-}
-
-enum BreakType {
-  cigarette(representation: 'Cigarette Break', title: 'Cigs', color: Colors.grey),
-  poop(representation: 'Poop Break', title: 'Poop', color: Colors.brown),
-  pee(representation: 'Pee Break', title: 'Pee', color: Colors.amber);
-
-  const BreakType({required this.representation, required this.title, required this.color});
-
-  final String representation;
-  final String title;
-  final Color color;
 }

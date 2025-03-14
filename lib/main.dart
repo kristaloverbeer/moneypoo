@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/configuration.dart';
 import 'pages/dashboard.dart';
+import 'providers/user_settings_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(userSettingsProvider);
+    final language = settings.language;
+
     return MaterialApp(
       title: 'MoneyPoo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins', primarySwatch: Colors.blue),
+      // Add localization support
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('fr'), Locale('es')],
+      locale: Locale(language.code),
       home: FutureBuilder<bool>(
         future: _isConfigured(),
         builder: (context, snapshot) {
@@ -35,9 +51,6 @@ class MyApp extends StatelessWidget {
 
   Future<bool> _isConfigured() async {
     final prefs = await SharedPreferences.getInstance();
-    // Delete when done
-    await prefs.clear();
-
-    return prefs.containsKey('monthlyIncome'); // Check for a key that indicates configuration.
+    return prefs.containsKey('monthlyIncome') && prefs.containsKey('weeklyHours');
   }
 }

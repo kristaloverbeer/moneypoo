@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flutter with codegen",
+            "request": "launch",
+            "type": "dart",
+            "preLaunchTask": "build_runner"
+        }
+    ]
+}
