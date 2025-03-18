@@ -5,10 +5,9 @@ formatter:
 
 linter:
   rules:
+    - avoid_print: error
     - always_declare_return_types
     - always_put_control_body_on_new_line
-    # - always_put_required_named_parameters_first
-    - avoid_print: error
     - avoid_returning_this
     - avoid_single_cascade_in_expression_statements
     - avoid_types_as_parameter_names
@@ -49,6 +48,9 @@ linter:
     - use_key_in_widget_constructors
     - use_named_constants
     - use_super_parameters
-# analyzer:
-#   plugins:
-#     - custom_lint
+    # Riverpod
+    - provider_parameters
+
+analyzer:
+  plugins:
+    - custom_lint

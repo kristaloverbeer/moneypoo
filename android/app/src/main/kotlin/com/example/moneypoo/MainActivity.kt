@@ -1,4 +1,4 @@
-package com.example.moneypoo
+package com.briscompanies.moneypoo
 
 import io.flutter.embedding.android.FlutterActivity
 
